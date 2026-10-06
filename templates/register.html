@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendaftaran - KSOP Utama Makassar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="auth-body">
+    <div class="auth-card" style="max-width: 600px;">
+        <div style="text-align: center; margin-bottom: 12px;">
+            <img src="{{ url_for('static', filename='LOGO_KEMENTERIAN_PERHUBUNGAN-removebg-preview.png') }}" alt="Logo" style="width: clamp(34px, 9vw, 46px); height: clamp(34px, 9vw, 46px); object-fit: contain;">
+        </div>
+        <h2>Registrasi Akun Magang</h2>
+        <p>KSOP Utama Makassar - Kementerian Perhubungan</p>
+
+        {% if error %}
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Pendaftaran Gagal',
+                text: {{ error|tojson }},
+                confirmButtonColor: '#0b2545'
+            });
+        </script>
+        {% endif %}
+
+        {% if success %}
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: {{ success|tojson }},
+                confirmButtonColor: '#0096c7'
+            }).then(() => {
+                window.location.href = "/login";
+            });
+        </script>
+        {% endif %}
+
+        <form action="/register" method="POST" enctype="multipart/form-data" id="formRegister">
+            <div class="form-grid-2">
+                <div class="form-group-luxury">
+                    <label>Username</label>
+                    <input type="text" name="username" required placeholder="Buat username...">
+                </div>
+                <div class="form-group-luxury">
+                    <label>Password <span style="font-weight: 400; color: #64748b;">(minimal 6 karakter)</span></label>
+                    <input type="password" name="password" id="regPassword" required minlength="6"
+                           title="Password minimal 6 karakter" placeholder="Minimal 6 karakter...">
+                </div>
+            </div>
+
+            <div class="form-group-luxury">
+                <label>Nama Lengkap</label>
+                <input type="text" name="nama" required placeholder="Nama lengkap beserta gelar...">
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group-luxury">
+                    <label>Kategori Program</label>
+                    <select name="kategori_magang" required>
+                        <option value="MagangHub">MagangHub</option>
+                        <option value="PKL">PKL (Praktek Kerja Lapangan)</option>
+                        <option value="Magang Berdampak">Magang Berdampak</option>
+                        <option value="Job Familiarization">Job Familiarization </option>
+                        <option value="Magang Lainnya">Magang Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group-luxury">
+                    <label>Divisi / Posisi Penempatan</label>
+                    <input type="text" name="posisi" required placeholder="Cth: Bagian Lalu Lintas Laut">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group-luxury">
+                    <label>Asal Kampus / Sekolah / Instansi</label>
+                    <input type="text" name="asal_instansi" required placeholder="Nama Universitas / Sekolah...">
+                </div>
+                <div class="form-group-luxury">
+                    <label>Mentor Pembimbing Lapangan</label>
+                    <input type="text" name="mentor" required placeholder="Nama pembimbing di KSOP...">
+                </div>
+            </div>
+
+            <div class="form-grid-2">
+                <div class="form-group-luxury">
+                    <label>Email Aktif</label>
+                    <input type="email" name="email" required placeholder="email@domain.com">
+                </div>
+                <div class="form-group-luxury">
+                    <label>Foto Wajah (Acuan Pengenalan)</label>
+                    <input type="file" name="foto_wajah" accept="image/*" required style="padding: 7px;">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit-luxury">Daftar Sekarang</button>
+        </form>
+
+        <p style="text-align:center; margin-top:15px; font-size:13px; color:#64748b;">Sudah punya akun? <a href="/login" style="color:#0096c7; font-weight:700; text-decoration:none;">Masuk di sini</a></p>
+    </div>
+
+    <script>
+        // Validasi password minimal 6 karakter dengan pop-up
+        document.getElementById('formRegister').addEventListener('submit', function (e) {
+            const pw = document.getElementById('regPassword').value.trim();
+            if (pw.length < 6) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Password Terlalu Pendek',
+                    text: 'Password minimal 6 karakter.',
+                    confirmButtonColor: '#0b2545'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

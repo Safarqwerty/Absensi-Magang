@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Profil Saya - KSOP Utama Makassar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="light-dashboard">
+    <div class="main-container" style="max-width: 650px;">
+        <div class="top-header-luxury">
+            <div class="header-left-group">
+                <p>Pengaturan Akun Resmi</p>
+                <h1>Profil Peserta Magang</h1>
+            </div>
+            <div class="header-right-wrapper">
+                <a href="/logout" class="btn-header-logout" title="Keluar Sistem">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Keluar</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="card-section-luxury">
+            {% if success %}<div class="alert-success">{{ success }}</div>{% endif %}
+            {% if error %}<div class="alert-error" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:16px;">{{ error }}</div>{% endif %}
+
+            <div style="text-align: center; margin-bottom: 25px;">
+                {% if user.foto_wajah and user.foto_wajah != '-' %}
+                    <img src="{{ url_for('uploaded_file', filename=user.foto_wajah) }}" alt="Foto" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #0096c7; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                {% else %}
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: #0b2545; color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 24px; font-weight: 800;">{{ user.nama[:2].upper() }}</div>
+                {% endif %}
+                <h3 style="margin-top: 12px; color: #0b2545; font-size: 20px; font-weight: 800;">{{ user.nama }}</h3>
+                <p style="font-size: 13px; color: #64748b; font-weight: 500;">Username: <b>{{ user.username }}</b> &middot; {{ user.kategori_magang }}</p>
+            </div>
+
+            <form action="/profil" method="POST" enctype="multipart/form-data">
+                <div class="form-grid-2">
+                    <div class="form-group-luxury">
+                        <label>Username</label>
+                        <input type="text" name="username" value="{{ user.username }}" required
+                               pattern="[A-Za-z0-9_.\-]{3,50}"
+                               title="3-50 karakter: huruf, angka, titik, garis bawah, atau strip">
+                    </div>
+                    <div class="form-group-luxury">
+                        <label>Kategori Magang</label>
+                        <select name="kategori_magang" required>
+                            {% for k in ['MagangHub', 'PKL', 'Magang Berdampak', 'Job Familiarization', 'Magang Lainnya'] %}
+                            <option value="{{ k }}" {% if user.kategori_magang == k %}selected{% endif %}>{{ k }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group-luxury">
+                        <label>Nama Lengkap</label>
+                        <input type="text" name="nama" value="{{ user.nama }}" required>
+                    </div>
+                    <div class="form-group-luxury">
+                        <label>Posisi / Divisi Magang</label>
+                        <input type="text" name="posisi" value="{{ user.posisi }}" required>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group-luxury">
+                        <label>Asal Instansi / Kampus</label>
+                        <input type="text" name="asal_instansi" value="{{ user.asal_instansi }}" required>
+                    </div>
+                    <div class="form-group-luxury">
+                        <label>Nama Mentor / Pembimbing</label>
+                        <input type="text" name="mentor" value="{{ user.mentor }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group-luxury">
+                    <label>Email Resmi</label>
+                    <input type="email" name="email" value="{{ user.email }}" required>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group-luxury">
+                        <label>Password Baru (Opsional)</label>
+                        <input type="password" name="password" placeholder="Kosongkan jika tetap">
+                    </div>
+                    <div class="form-group-luxury">
+                        <label>Perbarui Foto Wajah</label>
+                        <input type="file" name="foto_wajah" accept="image/*" style="padding: 9px;">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-luxury" style="margin-top: 10px;">Simpan Perubahan Profil</button>
+            </form>
+        </div>
+
+        <div class="bottom-nav-bar">
+            <a href="/" class="nav-item">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                Absen
+            </a>
+            <a href="/profil" class="nav-item active">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Profil
+            </a>
+            <a href="/riwayat" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Riwayat
+            </a>
+        </div>
+    </div>
+</body>
+</html>

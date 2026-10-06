@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Lengkap & Profesional</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏢 Dashboard Absensi & Kehadiran Karyawan</h1>
+            <p>Sistem Terintegrasi dengan Status, Alasan, dan Bukti Lampiran</p>
+        </header>
+
+        <!-- DASHBOARD METRIK -->
+        <div class="metrics-grid">
+            <div class="card">
+                <h3>Total Log</h3>
+                <p class="number">{{ total_absen }}</p>
+            </div>
+            <div class="card">
+                <h3>Hadir</h3>
+                <p class="number" style="color: #2e7d32;">{{ total_hadir }}</p>
+            </div>
+            <div class="card">
+                <h3>Sakit</h3>
+                <p class="number" style="color: #f39c12;">{{ total_sakit }}</p>
+            </div>
+            <div class="card">
+                <h3>Izin</h3>
+                <p class="number" style="color: #3498db;">{{ total_izin }}</p>
+            </div>
+            <div class="card">
+                <h3>Tanpa Ket.</h3>
+                <p class="number" style="color: #c62828;">{{ total_alpa }}</p>
+            </div>
+        </div>
+
+        <!-- FORM ABSENSI -->
+        <div class="section-box">
+            <h2>Formulir Pengisian Kehadiran</h2>
+            <form action="/absen" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Nama Karyawan:</label>
+                    <input type="text" name="nama" required placeholder="Masukkan nama lengkap...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Status Kehadiran:</label>
+                    <select name="status" id="statusSelect" onchange="toggleFormRequirements()">
+                        <option value="Hadir">Hadir</option>
+                        <option value="Sakit">Sakit</option>
+                        <option value="Izin">Izin</option>
+                        <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="groupAlasan">
+                    <label id="labelAlasan">Alasan / Keterangan:</label>
+                    <textarea name="alasan" id="inputAlasan" rows="3" placeholder="Tuliskan alasan secara detail..."></textarea>
+                </div>
+
+                <div class="form-group" id="groupBukti">
+                    <label id="labelBukti">Unggah Bukti (Foto Surat Dokter / Surat Izin):</label>
+                    <input type="file" name="bukti" id="inputBukti" accept="image/*,.pdf">
+                    <small style="color: #7f8c8d;">Format yang didukung: Gambar (JPG/PNG) atau PDF.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Koordinat GPS (Otomatis):</label>
+                    <div class="gps-inputs">
+                        <input type="text" id="latitude" name="latitude" value="-6.200000" readonly>
+                        <input type="text" id="longitude" name="longitude" value="106.816666" readonly>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Kirim Absensi</button>
+            </form>
+        </div>
+
+        <!-- TABEL RIWAYAT & EKSPOR -->
+        <div class="section-box">
+            <div class="table-header">
+                <h2>Riwayat Kehadiran Karyawan</h2>
+                <a href="/export" class="btn-export">📥 Ekspor ke Spreadsheet (CSV)</a>
+            </div>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nama</th>
+                            <th>Status</th>
+                            <th>Alasan</th>
+                            <th>Bukti</th>
+                            <th>Waktu</th>
+                            <th>Lokasi (Lat, Lon)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data_tabel %}
+                        <tr>
+                            <td>{{ row.id }}</td>
+                            <td>{{ row.nama }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if row.status == 'Hadir' %}badge-hadir
+                                    {% elif row.status == 'Sakit' %}badge-sakit
+                                    {% elif row.status == 'Izin' %}badge-izin
+                                    {% else %}badge-alpa{% endif %}">
+                                    {{ row.status }}
+                                </span>
+                            </td>
+                            <td>{{ row.alasan }}</td>
+                            <td>
+                                {% if row.bukti != '-' %}
+                                    <a href="{{ url_for('uploaded_file', filename=row.bukti) }}" target="_blank" class="link-bukti">Lihat Berkas</a>
+                                {% else %}
+                                    <span style="color: #999;">Tidak ada</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ row.waktu }}</td>
+                            <td>{{ row.latitude }}, {{ row.longitude }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center;">Belum ada data absensi tercatat.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Logika untuk mendeteksi pilihan status dan mengatur validasi wajib diisi
+        function toggleFormRequirements() {
+            const status = document.getElementById('statusSelect').value;
+            const inputAlasan = document.getElementById('inputAlasan');
+            const labelAlasan = document.getElementById('labelAlasan');
+            const inputBukti = document.getElementById('inputBukti');
+            const labelBukti = document.getElementById('labelBukti');
+
+            if (status === 'Sakit' || status === 'Izin' || status === 'Tanpa Keterangan') {
+                inputAlasan.required = true;
+                labelAlasan.innerHTML = `Alasan / Keterangan (<span style="color:red">*Wajib Diisi</span>):`;
+                
+                if (status === 'Sakit' || status === 'Izin') {
+                    inputBukti.required = true;
+                    labelBukti.innerHTML = `Unggah Bukti Surat (<span style="color:red">*Wajib</span>):`;
+                } else {
+                    inputBukti.required = false;
+                    labelBukti.innerHTML = `Unggah Bukti (Opsional):`;
+                }
+            } else {
+                inputAlasan.required = false;
+                labelAlasan.innerHTML = `Alasan / Keterangan:`;
+                inputBukti.required = false;
+                labelBukti.innerHTML = `Unggah Bukti (Opsional):`;
+            }
+        }
+    function toggleFormRequirements() {
+        const status = document.getElementById('statusSelect').value;
+        const groupKamera = document.getElementById('groupKamera');
+        const groupAlasan = document.getElementById('groupAlasan');
+        const groupBukti = document.getElementById('groupBukti');
+        const inputAlasan = document.getElementById('inputAlasan');
+
+        if (status === 'Masuk' || status === 'Pulang') {
+            groupKamera.style.display = 'block';
+            groupAlasan.style.display = 'none';
+            groupBukti.style.display = 'none';
+            inputAlasan.required = false;
+        } else {
+            groupKamera.style.display = 'none';
+            groupAlasan.style.display = 'block';
+            groupBukti.style.display = 'block';
+            inputAlasan.required = true;
+        }
+    }
+        // Ambil lokasi GPS secara otomatis
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+            });
+        }
+    </script>
+</body>
+</html>

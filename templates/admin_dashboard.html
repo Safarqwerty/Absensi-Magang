@@ -1,0 +1,889 @@
+{# Pemisah antar bagian #}
+{% macro pemisah(label) -%}
+<div style="display: flex; align-items: center; gap: 14px; margin: 34px 0 18px;">
+    <div style="flex: 1; height: 2px; background: #cbd5e1; border-radius: 2px;"></div>
+    <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.4px; color: #475569; text-transform: uppercase; white-space: nowrap;">{{ label }}</div>
+    <div style="flex: 1; height: 2px; background: #cbd5e1; border-radius: 2px;"></div>
+</div>
+{%- endmacro %}
+{# Ikon vektor (SVG) pengganti emoji #}
+{% macro ikon(nama, ukuran=14) -%}
+<svg width="{{ ukuran }}" height="{{ ukuran }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 5px; flex-shrink: 0;" aria-hidden="true">
+{%- if nama == 'check' %}<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+{%- elif nama == 'download' %}<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+{%- elif nama == 'clock' %}<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+{%- elif nama == 'chart' %}<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+{%- elif nama == 'zap' %}<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+{%- elif nama == 'award' %}<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+{%- elif nama == 'list' %}<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/>
+{%- elif nama == 'file' %}<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+{%- elif nama == 'edit' %}<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+{%- elif nama == 'trash' %}<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+{%- endif %}</svg>
+{%- endmacro %}
+
+{# Lencana peringkat 1-3 (medali SVG) #}
+{% macro medali(rank, ukuran=28) -%}
+{%- set isi = {1: '#f4c430', 2: '#cbd5e1', 3: '#e0a370'}[rank] -%}
+{%- set garis = {1: '#b8860b', 2: '#64748b', 3: '#8a4b1e'}[rank] -%}
+<svg width="{{ ukuran }}" height="{{ ukuran }}" viewBox="0 0 24 24" style="vertical-align: middle; flex-shrink: 0;" role="img" aria-label="Peringkat {{ rank }}">
+<path d="M8 1.5l4 8.5M16 1.5l-4 8.5" stroke="#0b2545" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+<circle cx="12" cy="15.5" r="7" fill="{{ isi }}" stroke="{{ garis }}" stroke-width="1.6"/>
+<text x="12" y="19" text-anchor="middle" font-size="9.5" font-weight="800" font-family="Arial, sans-serif" fill="{{ garis }}">{{ rank }}</text>
+</svg>
+{%- endmacro %}
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Admin - KSOP Utama Makassar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body class="light-dashboard">
+    <div class="main-container" style="max-width: 1150px;">
+        <div class="top-header-luxury">
+            <div class="header-left-group">
+                <p>Panel Kontrol Administrator</p>
+                <h1>KSOP Utama Makassar</h1>
+                <div class="header-clock-live" id="headerLiveClock">00:00:00 WITA</div>
+            </div>
+
+            <div class="header-right-wrapper">
+                <div class="header-right-profile" style="cursor: default;">
+                    <div class="profile-avatar-img" style="background:#0096c7; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700;">AD</div>
+                    <div class="profile-info-text">
+                        <span class="profile-name">{{ user.nama }}</span>
+                        <span class="profile-role">Administrator</span>
+                    </div>
+                </div>
+
+                <a href="/logout" class="btn-header-logout" title="Keluar Sistem">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Keluar</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- ============ RINGKASAN HARI INI (otomatis mulai dari 0 setiap hari, WITA) ============ -->
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">
+            <h3 style="font-size: 14px; font-weight: 800; color: #0b2545; margin: 0;">Ringkasan Hari Ini</h3>
+            <span style="font-size: 12px; color: #64748b; font-weight: 600;">{{ ringkas.tanggal }} &middot; dihitung ulang otomatis setiap hari (WITA){% if filter_kategori %} &middot; {{ filter_kategori }}{% endif %}{% if filter_cari %} &middot; "{{ filter_cari }}"{% endif %}</span>
+        </div>
+        <div class="absen-grid-2" style="grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px;">
+            <div class="absen-card-luxury" style="padding: 14px;">
+                <div class="card-header-title">Total Log</div>
+                <div class="time-box-large" style="font-size: 22px; color: #0b2545;">{{ ringkas.total_log }}</div>
+            </div>
+            <div class="absen-card-luxury" style="padding: 14px;">
+                <div class="card-header-title"><span class="card-indicator-dot dot-green"></span>Hadir</div>
+                <div class="time-box-large" style="font-size: 22px; color: #2a9d8f;">{{ ringkas.hadir }}</div>
+            </div>
+            <div class="absen-card-luxury" style="padding: 14px;">
+                <div class="card-header-title">Telat</div>
+                <div class="time-box-large" style="font-size: 22px; color: #e76f51;">{{ ringkas.telat }}</div>
+            </div>
+            <div class="absen-card-luxury" style="padding: 14px;">
+                <div class="card-header-title">Pulang</div>
+                <div class="time-box-large" style="font-size: 22px; color: #0096c7;">{{ ringkas.pulang }}</div>
+            </div>
+            <div class="absen-card-luxury" style="padding: 14px;">
+                <div class="card-header-title">Izin / Sakit</div>
+                <div class="time-box-large" style="font-size: 22px; color: #1d3557;">{{ ringkas.izin_sakit }}</div>
+            </div>
+            <div class="absen-card-luxury" style="padding: 14px;">
+                <div class="card-header-title">Cuti</div>
+                <div class="time-box-large" style="font-size: 22px; color: #6c757d;">{{ ringkas.cuti }}</div>
+            </div>
+            <div class="absen-card-luxury" style="padding: 14px;">
+                <div class="card-header-title">Tanpa Ket</div>
+                <div class="time-box-large" style="font-size: 22px; color: #e63946;">{{ ringkas.tanpa_ket }}</div>
+            </div>
+        </div>
+
+        <!-- ============ BAGIAN PERSETUJUAN ============ -->
+        {{ pemisah('Persetujuan Kehadiran') }}
+        <div class="card-section-luxury">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: 700; color: #0b2545;">Persetujuan & Pemantauan Kehadiran Berdasarkan Kategori</h3>
+                    <p style="font-size: 12px; color: #64748b;">Kelola persetujuan dan ekspor riwayat. Filter berdasarkan nama, kategori, dan tanggal.</p>
+                </div>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <!-- SETUJUI SEMUA -->
+                    <form action="/admin/setujui-semua" method="POST" style="margin: 0;">
+                        <input type="hidden" name="kembali" value="{{ request.full_path }}">
+                        <input type="hidden" name="kategori" value="{{ filter_kategori }}">
+                        <input type="hidden" name="cari" value="{{ filter_cari }}">
+                        <input type="hidden" name="tanggal" value="{{ filter_tanggal }}">
+                        <input type="hidden" name="bulan" value="{{ filter_bulan }}">
+                        <input type="hidden" name="tahun" value="{{ filter_tahun }}">
+                        <button type="submit"
+                                onclick="return confirm('Setujui SEMUA permohonan yang masih menunggu{{ (" pada filter yang sedang aktif") if (filter_kategori or filter_cari or filter_tanggal or filter_bulan or filter_tahun) else "" }}?')"
+                                style="background: #2a9d8f; color: #fff; border: none; padding: 9px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                            {{ ikon('check') }}Setujui Semua
+                        </button>
+                    </form>
+
+                    <!-- EXPORT (dengan foto) -->
+                    <a href="/export/excel?kategori={{ filter_kategori|urlencode }}&cari={{ filter_cari|urlencode }}&tanggal={{ filter_tanggal|urlencode }}&bulan={{ filter_bulan|urlencode }}&tahun={{ filter_tahun|urlencode }}" style="background: #eef4f8; color: #0096c7; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none;">{{ ikon('download') }}Export Sheets + Foto ({{ filter_kategori if filter_kategori else 'Semua' }})</a>
+                </div>
+            </div>
+
+            <!-- FORM FILTER RIWAYAT -->
+            <form method="GET" action="/" id="formFilterRiwayat" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 14px; margin-bottom: 18px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) 100px; gap: 10px; align-items: end;">
+                <input type="hidden" name="rekap_kategori" value="{{ rekap_kategori }}">
+                <input type="hidden" name="rekap_cari" value="{{ rekap_cari }}">
+                <input type="hidden" name="rekap_dari" value="{{ rekap_dari }}">
+                <input type="hidden" name="rekap_sampai" value="{{ rekap_sampai }}">
+                <div class="form-group-luxury" style="margin-bottom: 0;">
+                    <label style="font-size: 10px;">Cari Nama</label>
+                    <div class="search-input-wrapper">
+                        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" name="cari" class="search-input-luxury" data-autosubmit="debounce" placeholder="" value="{{ filter_cari }}">
+                    </div>
+                </div>
+                <div class="form-group-luxury" style="margin-bottom: 0;">
+                    <label style="font-size: 10px;">Filter Kategori</label>
+                    <select name="kategori" data-autosubmit="instant">
+                        <option value="">-- Semua Kategori --</option>
+                        <option value="MagangHub" {% if filter_kategori == 'MagangHub' %}selected{% endif %}>MagangHub</option>
+                        <option value="PKL" {% if filter_kategori == 'PKL' %}selected{% endif %}>PKL</option>
+                        <option value="Magang Berdampak" {% if filter_kategori == 'Magang Berdampak' %}selected{% endif %}>Magang Berdampak</option>
+                        <option value="Job Familiarization" {% if filter_kategori == 'Job Familiarization' %}selected{% endif %}>Job Familiarization</option>
+                        <option value="Magang Lainnya" {% if filter_kategori == 'Magang Lainnya' %}selected{% endif %}>Magang Lainnya</option>
+                    </select>
+                </div>
+                <div class="form-group-luxury" style="margin-bottom: 0;">
+                    <label style="font-size: 10px;">Filter Tanggal</label>
+                    <input type="date" name="tanggal" data-autosubmit="instant" value="{{ filter_tanggal }}">
+                </div>
+                <div>
+                    <button type="submit" class="btn-submit-luxury" style="margin-top: 0; padding: 10px; font-size: 12px;">Cari Data</button>
+                </div>
+            </form>
+            <p id="filterAutoStatus" style="display:none; font-size: 11px; color: #0096c7; font-weight: 700; margin: -10px 0 14px 4px;">{{ ikon('clock', 12) }}Menerapkan filter...</p>
+
+            <div style="overflow-x: auto;">
+                <table class="light-table">
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Nama & Kategori</th>
+                            <th>Status</th>
+                            <th>Alasan</th>
+                            <th>Bukti</th>
+                            <th>Persetujuan</th>
+                            <th>Aksi & Catatan Admin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data_tabel %}
+                        <tr>
+                            <td>{{ row.waktu }}</td>
+                            <td>
+                                <b>{{ row.nama }}</b><br>
+                                <span style="font-size:10px; color:#0096c7; font-weight:700;">{{ row.kategori_magang if row.kategori_magang else 'Magang Lainnya' }}</span><br>
+                                <span style="font-size:10px; color:#64748b;">{{ row.posisi }}</span>
+                            </td>
+                            <td>
+                                <span class="badge-pill
+                                    {% if row.status in ['Masuk', 'Pulang', 'Hadir'] %}badge-hadir
+                                    {% elif row.status == 'Telat' %}badge-sakit
+                                    {% elif row.status == 'Izin' %}badge-izin
+                                    {% elif row.status == 'Sakit' %}badge-sakit
+                                    {% else %}badge-alpa{% endif %}">
+                                    {{ row.status }}
+                                </span>
+                            </td>
+                            <td style="min-width: 140px; max-width: 220px; word-break: break-word;">
+                                {{ row.alasan if row.alasan and row.alasan != '-' else '-' }}
+                            </td>
+                            <td style="text-align: center;">
+                                {% if row.bukti and row.bukti != '-' %}
+                                    {% if row.bukti.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')) %}
+                                        <a href="{{ url_for('uploaded_file', filename=row.bukti) }}" target="_blank" title="Buka ukuran penuh">
+                                            <img src="{{ url_for('uploaded_file', filename=row.bukti) }}" alt="Bukti {{ row.nama }}" loading="lazy"
+                                                 style="width: 110px; height: 110px; object-fit: cover; border-radius: 10px; border: 1px solid #cbd5e1; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: block; margin: 0 auto;">
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('uploaded_file', filename=row.bukti) }}" target="_blank" style="color: #0096c7; font-weight: 700; text-decoration: underline; font-size: 11px;">{{ ikon('file', 12) }}Buka Berkas</a>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #94a3b8;">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span style="font-weight: 700; font-size: 11px; padding: 4px 8px; border-radius: 6px; display:inline-block;
+                                    {% if row.status_persetujuan == 'Disetujui' %}background: #e8f5e9; color: #2e7d32;
+                                    {% elif row.status_persetujuan == 'Ditolak' %}background: #ffebee; color: #c62828;
+                                    {% else %}background: #fffde7; color: #f57f17;{% endif %}">
+                                    {{ row.status_persetujuan if row.status_persetujuan else 'Menunggu' }}
+                                </span>
+                                {% if row.catatan_admin and row.catatan_admin != '-' %}
+                                    <div style="font-size: 11px; color: #475569; margin-top: 4px;"><b>Catatan:</b> {{ row.catatan_admin }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.status_persetujuan == 'Disetujui' %}
+                                    <div style="font-size: 11px; color: #2e7d32; font-weight: 700; background: #e8f5e9; padding: 6px 10px; border-radius: 6px; text-align: center;">Telah Disetujui</div>
+                                {% elif row.status_persetujuan == 'Ditolak' %}
+                                    <div style="font-size: 11px; color: #c62828; font-weight: 700; background: #ffebee; padding: 6px 10px; border-radius: 6px; text-align: center;">Permohonan Ditolak</div>
+                                {% else %}
+                                    <form action="/admin/aksi/{{ row.id }}" method="POST" style="display: flex; flex-direction: column; gap: 6px; min-width: 180px;">
+                                        <input type="hidden" name="kembali" value="{{ request.full_path }}">
+                                        <input type="text" name="catatan_admin" placeholder="Tulis catatan..."
+                                               onkeydown="if(event.key==='Enter'){event.preventDefault();}"
+                                               style="font-size: 11px; padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                        <div style="display: flex; gap: 4px;">
+                                            <button type="submit" name="aksi" value="Disetujui"
+                                                    onclick="return confirm('Setujui permohonan {{ row.nama|e }}?')"
+                                                    style="background: #2a9d8f; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; flex: 1;">Terima</button>
+                                            <button type="submit" name="aksi" value="Ditolak"
+                                                    onclick="return confirm('Tolak permohonan {{ row.nama|e }}?')"
+                                                    style="background: #e63946; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; flex: 1;">Tolak</button>
+                                        </div>
+                                    </form>
+                                {% endif %}
+
+                                <!-- HAPUS RIWAYAT SATU-SATU (form terpisah, tidak nested) -->
+                                <form action="/admin/hapus/{{ row.id }}" method="POST" style="margin-top: 6px;">
+                                    <input type="hidden" name="kembali" value="{{ request.full_path }}">
+                                    <button type="submit"
+                                            data-konfirmasi-judul="Hapus Riwayat Absensi?"
+                                            data-konfirmasi-pesan="Riwayat absensi {{ row.nama }} ({{ row.status }}, {{ row.waktu }}) akan dihapus permanen beserta foto buktinya. Tindakan ini tidak dapat dibatalkan."
+                                            data-konfirmasi-tombol="Ya, Hapus"
+                                            style="width: 100%; background: #fff; color: #c62828; border: 1px solid #ef9a9a; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                                        {{ ikon('trash', 12) }}Hapus
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" style="text-align: center; color: #64748b; padding: 30px;">Tidak ada data absensi pada filter tanggal / kategori / pencarian yang dipilih.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============ BAGIAN REKAP ABSENSI ============ -->
+        {{ pemisah('Rekap Absensi') }}
+        <div class="card-section-luxury">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h3 style="font-size: 15px; font-weight: 700; color: #0b2545;">{{ ikon('chart', 16) }}Rekap Absensi - {{ rekap_label }}</h3>
+                    <p style="font-size: 12px; color: #64748b;">Kategori: <b>{{ rekap_kategori if rekap_kategori else 'Semua Kategori' }}</b>{% if rekap_cari %} | Nama: <b>{{ rekap_cari }}</b>{% endif %}. Filter rekap terpisah dari filter persetujuan. Absen yang ditolak tidak dihitung.</p>
+                </div>
+                <a href="/export/rekap?rekap_kategori={{ rekap_kategori|urlencode }}&rekap_cari={{ rekap_cari|urlencode }}&rekap_dari={{ rekap_dari|urlencode }}&rekap_sampai={{ rekap_sampai|urlencode }}" style="background: #eef4f8; color: #0096c7; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none;">{{ ikon('download') }}Export Rekap + Foto ({{ rekap_kategori if rekap_kategori else 'Semua' }})</a>
+            </div>
+
+            <!-- FILTER REKAP: rentang tanggal (kategori & nama mengikuti filter di atas) -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 14px; margin-bottom: 12px;">
+                <form method="GET" action="/" id="formRekap" style="display: flex; gap: 8px; align-items: end; flex-wrap: wrap; margin: 0;">
+                    <input type="hidden" name="kategori" value="{{ filter_kategori }}">
+                    <input type="hidden" name="cari" value="{{ filter_cari }}">
+                    <input type="hidden" name="tanggal" value="{{ filter_tanggal }}">
+                    <input type="hidden" name="bulan" value="{{ filter_bulan }}">
+                    <input type="hidden" name="tahun" value="{{ filter_tahun }}">
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Cari Nama</label>
+                        <input type="text" name="rekap_cari" value="{{ rekap_cari }}" placeholder="Nama peserta" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; min-width: 150px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Kategori Magang</label>
+                        <select name="rekap_kategori" onchange="simpanScroll(); this.form.submit()" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; background: #fff;">
+                            <option value="">-- Semua Kategori --</option>
+                            {% for k in ['MagangHub', 'PKL', 'Magang Berdampak', 'Job Familiarization', 'Magang Lainnya'] %}
+                            <option value="{{ k }}" {% if rekap_kategori == k %}selected{% endif %}>{{ k }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Dari Tanggal</label>
+                        <input type="date" name="rekap_dari" id="rekapDari" value="{{ rekap_dari }}" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Sampai Tanggal</label>
+                        <input type="date" name="rekap_sampai" id="rekapSampai" value="{{ rekap_sampai }}" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <button type="submit" style="background: #0b2545; color: #fff; border: none; padding: 9px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">Tampilkan</button>
+                    <a href="/?kategori={{ filter_kategori|urlencode }}&cari={{ filter_cari|urlencode }}&tanggal={{ filter_tanggal|urlencode }}&bulan={{ filter_bulan|urlencode }}&tahun={{ filter_tahun|urlencode }}" onclick="simpanScroll()" style="background: #fff; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; text-decoration: none;">Reset Rekap</a>
+                </form>
+            </div>
+
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;">
+                {% for nama, d, e in rekap_preset %}
+                <button type="button" class="rekap-preset" data-dari="{{ d }}" data-sampai="{{ e }}"
+                        style="background: {{ '#0096c7' if (d == rekap_dari and e == rekap_sampai) else '#eef4f8' }}; color: {{ '#fff' if (d == rekap_dari and e == rekap_sampai) else '#0096c7' }}; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; cursor: pointer;">{{ nama }}</button>
+                {% endfor %}
+            </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px;">
+            <div style="margin: 0; padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff;">
+                <h3 style="font-size: 15px; font-weight: 700; color: #0b2545;">{{ ikon('zap', 16) }}3 Tercepat Hari Ini</h3>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Absen masuk paling awal hari ini ({{ rekap_kategori if rekap_kategori else 'semua kategori' }}).</p>
+                {% for t in top_hari_ini %}
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc;">
+                    <div style="line-height: 1;">{{ medali(t.lencana, 32) }}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #0b2545; font-size: 13px;">{{ t.nama }}</div>
+                        <div style="font-size: 10px; color: #0096c7; font-weight: 700;">{{ t.kategori }}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; font-size: 14px; color: #0b2545;">{{ t.jam }}</div>
+                        <div style="font-size: 10px; color: {{ '#e63946' if t.status == 'Telat' else '#2a9d8f' }}; font-weight: 700;">{{ t.status }}</div>
+                    </div>
+                </div>
+                {% else %}
+                <p style="font-size: 12px; color: #64748b; padding: 12px 0;">Belum ada yang absen masuk hari ini.</p>
+                {% endfor %}
+            </div>
+
+            <div style="margin: 0; padding: 14px; border: 1px solid #e2e8f0; border-radius: 14px; background: #fff;">
+                <h3 style="font-size: 15px; font-weight: 700; color: #0b2545;">{{ ikon('award', 16) }}Peserta Terawal</h3>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Periode {{ rekap_label }} ({{ rekap_kategori if rekap_kategori else 'semua kategori' }}), berdasarkan rata-rata jam absen masuk terawal.</p>
+                {% for t in top_bulan %}
+                <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc;">
+                    <div style="line-height: 1;">{{ medali(t.lencana, 32) }}</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: #0b2545; font-size: 13px;">{{ t.nama }}</div>
+                        <div style="font-size: 10px; color: #0096c7; font-weight: 700;">{{ t.kategori }}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-weight: 800; font-size: 14px; color: #0b2545;">{{ t.rata_jam }}</div>
+                        <div style="font-size: 10px; color: #64748b; font-weight: 700;">{{ t.hadir }} hari hadir</div>
+                    </div>
+                </div>
+                {% else %}
+                <p style="font-size: 12px; color: #64748b; padding: 12px 0;">Belum ada data absen masuk pada periode ini.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+            <!-- TABEL REKAP PER PESERTA (dengan rincian tanggal & jam) -->
+            <div style="margin-top: 16px;">
+            <div style="overflow-x: auto;">
+                <table class="light-table">
+                    <thead>
+                        <tr>
+                            <th>Peserta</th>
+                            <th>Hadir (hari)</th>
+                            <th>Telat (hari)</th>
+                            <th>Izin</th>
+                            <th>Sakit</th>
+                            <th>Cuti</th>
+                            <th>Tanpa Ket</th>
+                            <th>Rata-rata Masuk</th>
+                            <th>Rincian Tanggal &amp; Jam</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in rekap_bulanan %}
+                        <tr>
+                            <td>
+                                {% if r.lencana %}<span style="margin-right: 4px;">{{ medali(r.lencana, 22) }}</span>{% endif %}<b>{{ r.nama }}</b><br>
+                                <span style="font-size:10px; color:#0096c7; font-weight:700;">{{ r.kategori }}</span>
+                            </td>
+                            <td><b style="color:#2a9d8f;">{{ r.hadir }}</b></td>
+                            <td>{{ r.telat }}</td>
+                            <td>{{ r.izin }}</td>
+                            <td>{{ r.sakit }}</td>
+                            <td>{{ r.cuti }}</td>
+                            <td><span style="color: {{ '#e63946' if r.tanpa_ket else 'inherit' }};">{{ r.tanpa_ket }}</span></td>
+                            <td>{{ r.rata_jam }}</td>
+                            <td style="min-width: 230px;">
+                                {% if r.rincian %}
+                                <details>
+                                    <summary style="cursor: pointer; color: #0096c7; font-weight: 700; font-size: 11px;">{{ r.rincian|length }} hari tercatat</summary>
+                                    <table style="width: 100%; font-size: 11px; margin-top: 6px; border-collapse: collapse;">
+                                        <tr style="color:#64748b;"><td>Tanggal</td><td>Masuk</td><td>Pulang</td><td>Ket</td></tr>
+                                        {% for h in r.rincian %}
+                                        <tr style="border-top: 1px solid #e2e8f0;">
+                                            <td>{{ h.tanggal }}</td><td><b>{{ h.masuk }}</b></td><td>{{ h.pulang }}</td><td>{{ h.ket }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </table>
+                                </details>
+                                {% else %}-{% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="9" style="text-align: center; color: #64748b; padding: 30px;">Belum ada peserta terdaftar.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+
+            <!-- DAFTAR LENGKAP SESUAI FILTER (tanggal, jam, foto) -->
+            <div style="margin-top: 22px;">
+                <h3 style="font-size: 15px; font-weight: 700; color: #0b2545;">{{ ikon('list', 16) }}Daftar Absensi Sesuai Filter ({{ daftar_rekap|length }} data)</h3>
+                <p style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Periode {{ rekap_label }}. Menampilkan tanggal, jam, dan foto bukti.</p>
+                <div style="overflow-x: auto;">
+                    <table class="light-table">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th><th>Jam</th><th>Nama &amp; Kategori</th><th>Status</th>
+                                <th>Alasan</th><th>Foto / Bukti</th><th>Persetujuan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in daftar_rekap %}
+                            <tr>
+                                <td>{{ (row.waktu|string)[:10] }}</td>
+                                <td><b>{{ (row.waktu|string)[11:19] }}</b></td>
+                                <td>
+                                    <b>{{ row.nama }}</b><br>
+                                    <span style="font-size:10px; color:#0096c7; font-weight:700;">{{ row.kategori_magang if row.kategori_magang else 'Magang Lainnya' }}</span>
+                                </td>
+                                <td>{{ row.status }}</td>
+                                <td style="max-width: 200px; word-break: break-word;">{{ row.alasan if row.alasan and row.alasan != '-' else '-' }}</td>
+                                <td style="text-align: center;">
+                                    {% if row.bukti and row.bukti != '-' %}
+                                        {% if row.bukti.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')) %}
+                                            <a href="{{ url_for('uploaded_file', filename=row.bukti) }}" target="_blank">
+                                                <img src="{{ url_for('uploaded_file', filename=row.bukti) }}" alt="Bukti {{ row.nama }}" loading="lazy"
+                                                     style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;">
+                                            </a>
+                                        {% else %}
+                                            <a href="{{ url_for('uploaded_file', filename=row.bukti) }}" target="_blank" style="color:#0096c7; font-weight:700; font-size:11px;">{{ ikon('file', 12) }}Buka Berkas</a>
+                                        {% endif %}
+                                    {% else %}-{% endif %}
+                                </td>
+                                <td>{{ row.status_persetujuan if row.status_persetujuan else 'Menunggu' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" style="text-align:center; color:#64748b; padding:30px;">Tidak ada data absensi pada filter ini.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ BAGIAN DATA PESERTA ============ -->
+        {{ pemisah('Data Peserta') }}
+        <div class="card-section-luxury">
+            <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 15px; font-weight: 700; color: #0b2545;">Daftar Peserta Magang Terdaftar</h3>
+                <p style="font-size: 12px; color: #64748b;">Dikelompokkan berdasarkan jenis program magang agar lebih mudah dipantau.</p>
+            </div>
+
+            {% with pesan = get_flashed_messages(with_categories=true) %}
+            {% for kategori_pesan, isi in pesan %}
+            <div style="font-size: 12px; font-weight: 700; padding: 10px 14px; border-radius: 10px; margin-bottom: 12px;
+                {% if kategori_pesan == 'success' %}background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7;
+                {% else %}background: #ffebee; color: #c62828; border: 1px solid #ef9a9a;{% endif %}">{{ isi }}</div>
+            {% endfor %}
+            {% endwith %}
+
+            <!-- TAMBAH PESERTA -->
+            <details style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; margin-bottom: 16px;">
+                <summary style="cursor: pointer; font-size: 12px; font-weight: 700; color: #0096c7;">+ Tambah Peserta Baru</summary>
+                <form action="/admin/peserta/tambah" method="POST" enctype="multipart/form-data" style="margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; align-items: end;">
+                    <input type="hidden" name="kembali" value="{{ request.full_path }}">
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Username *</label>
+                        <input type="text" name="username" required minlength="3" maxlength="50" pattern="[A-Za-z0-9_.\-]+" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Password * (min. 6 karakter)</label>
+                        <input type="text" name="password" required minlength="6" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Nama Lengkap *</label>
+                        <input type="text" name="nama" required style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Kategori Magang</label>
+                        <select name="kategori_magang" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; background: #fff;">
+                            {% for k in ['MagangHub', 'PKL', 'Magang Berdampak', 'Job Familiarization', 'Magang Lainnya'] %}
+                            <option value="{{ k }}">{{ k }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Divisi / Posisi</label>
+                        <input type="text" name="posisi" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Asal Instansi</label>
+                        <input type="text" name="asal_instansi" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Mentor</label>
+                        <input type="text" name="mentor" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Email</label>
+                        <input type="email" name="email" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Foto Wajah (opsional)</label>
+                        <input type="file" name="foto_wajah" accept="image/*" style="width: 100%; box-sizing: border-box; font-size: 11px;">
+                    </div>
+                    <div>
+                        <button type="submit" style="background: #2a9d8f; color: #fff; border: none; padding: 9px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">Simpan Peserta</button>
+                    </div>
+                </form>
+                <p style="font-size: 11px; color: #64748b; margin: 10px 0 0;">Tanpa foto wajah, verifikasi wajah saat absen dilewati untuk peserta ini sampai foto diunggah.</p>
+            </details>
+
+            <div class="kategori-tabs" id="kategoriTabs">
+                <button type="button" class="kategori-tab-btn active" data-tab="Semua">
+                    Semua <span class="tab-count" id="count-Semua">0</span>
+                </button>
+                <button type="button" class="kategori-tab-btn" data-tab="MagangHub">
+                    MagangHub <span class="tab-count" id="count-MagangHub">0</span>
+                </button>
+                <button type="button" class="kategori-tab-btn" data-tab="PKL">
+                    PKL <span class="tab-count" id="count-PKL">0</span>
+                </button>
+                <button type="button" class="kategori-tab-btn" data-tab="Magang Berdampak">
+                    Magang Berdampak <span class="tab-count" id="count-Magang Berdampak">0</span>
+                </button>
+                <button type="button" class="kategori-tab-btn" data-tab="Job Familiarization">
+                    Job Familiarization <span class="tab-count" id="count-Job Familiarization">0</span>
+                </button>
+                <button type="button" class="kategori-tab-btn" data-tab="Magang Lainnya">
+                    Magang Lainnya <span class="tab-count" id="count-Magang Lainnya">0</span>
+                </button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table class="light-table" id="pesertaTable">
+                    <thead>
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nama Lengkap</th>
+                            <th>Username</th>
+                            <th>Kategori Magang</th>
+                            <th>Divisi / Posisi</th>
+                            <th>Asal Instansi</th>
+                            <th>Mentor</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in data_magang %}
+                        <tr data-kategori="{{ m.kategori_magang if m.kategori_magang else 'Magang Lainnya' }}">
+                            <td>
+                                {% if m.foto_wajah and m.foto_wajah != '-' %}
+                                    <img src="{{ url_for('uploaded_file', filename=m.foto_wajah) }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td><b>{{ m.nama }}</b></td>
+                            <td><code style="font-size: 11px; background: #eef4f8; padding: 2px 6px; border-radius: 6px; color: #0b2545;">{{ m.username }}</code></td>
+                            <td>
+                                <span style="font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; background: #eef4f8; color: #0096c7; border: 1px solid #cbd5e1;">
+                                    {{ m.kategori_magang if m.kategori_magang else 'Magang Lainnya' }}
+                                </span>
+                            </td>
+                            <td>{{ m.posisi }}</td>
+                            <td>{{ m.asal_instansi }}</td>
+                            <td>{{ m.mentor }}</td>
+                            <td style="white-space: nowrap;">
+                                <button type="button" class="btn-edit-peserta"
+                                        data-id="{{ m.id }}"
+                                        data-username="{{ m.username }}"
+                                        data-nama="{{ m.nama }}"
+                                        data-kategori="{{ m.kategori_magang if m.kategori_magang else 'Magang Lainnya' }}"
+                                        data-posisi="{{ m.posisi or '' }}"
+                                        data-instansi="{{ m.asal_instansi or '' }}"
+                                        data-mentor="{{ m.mentor or '' }}"
+                                        data-email="{{ m.email or '' }}"
+                                        style="background: #eef4f8; color: #0096c7; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; margin-right: 4px;">
+                                    {{ ikon('edit', 12) }}Edit
+                                </button>
+                                <form action="/admin/peserta/hapus/{{ m.id }}" method="POST" style="margin: 0; display: inline-block;">
+                                    <input type="hidden" name="kembali" value="{{ request.full_path }}">
+                                    <button type="submit"
+                                            data-konfirmasi-judul="Hapus Peserta?"
+                                            data-konfirmasi-pesan="Peserta {{ m.nama }} (username: {{ m.username }}) akan dihapus beserta foto wajahnya dan tidak bisa login lagi. Riwayat absensinya tetap tersimpan."
+                                            data-konfirmasi-tombol="Ya, Hapus Peserta"
+                                            style="background: #fff; color: #c62828; border: 1px solid #ef9a9a; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                                        {{ ikon('trash', 12) }}Hapus
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="8" style="text-align: center; color: #64748b; padding: 30px;">Belum ada peserta magang terdaftar.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p id="pesertaEmptyState" style="display:none; text-align:center; color:#64748b; padding: 30px; font-size: 12px;">Tidak ada peserta pada kategori ini.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- POP-UP EDIT PESERTA -->
+    <div id="modalEdit" role="dialog" aria-modal="true" aria-labelledby="editJudul" style="display: none; position: fixed; inset: 0; z-index: 9998; background: rgba(11, 37, 69, 0.55); align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+        <div style="background: #fff; border-radius: 16px; max-width: 560px; width: 100%; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); margin: auto;">
+            <h3 id="editJudul" style="margin: 0 0 4px; font-size: 16px; font-weight: 800; color: #0b2545;">Edit Data Peserta</h3>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">Username: <b id="editUsernameTeks" style="color: #0b2545;"></b> (tidak dapat diubah)</p>
+            <form id="formEditPeserta" method="POST" enctype="multipart/form-data" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;">
+                <input type="hidden" name="kembali" value="{{ request.full_path }}">
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Nama Lengkap *</label>
+                    <input type="text" name="nama" id="editNama" required style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Kategori Magang</label>
+                    <select name="kategori_magang" id="editKategori" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; background: #fff;">
+                        {% for k in ['MagangHub', 'PKL', 'Magang Berdampak', 'Job Familiarization', 'Magang Lainnya'] %}
+                        <option value="{{ k }}">{{ k }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Divisi / Posisi</label>
+                    <input type="text" name="posisi" id="editPosisi" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Asal Instansi</label>
+                    <input type="text" name="asal_instansi" id="editInstansi" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Mentor</label>
+                    <input type="text" name="mentor" id="editMentor" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Email</label>
+                    <input type="email" name="email" id="editEmail" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Password Baru (kosongkan jika tidak diubah)</label>
+                    <input type="text" name="password" id="editPassword" minlength="6" placeholder="Minimal 6 karakter" autocomplete="off" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size: 10px; font-weight: 700; color: #64748b; margin-bottom: 3px;">Foto Wajah Baru (kosongkan jika tidak diubah)</label>
+                    <input type="file" name="foto_wajah" id="editFoto" accept="image/*" style="width: 100%; box-sizing: border-box; font-size: 11px;">
+                </div>
+                <div style="grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px;">
+                    <button type="button" id="editBatal" style="background: #eef4f8; color: #475569; border: 1px solid #cbd5e1; padding: 9px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">Batal</button>
+                    <button type="submit" style="background: #0096c7; color: #fff; border: none; padding: 9px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- POP-UP KONFIRMASI -->
+    <div id="modalKonfirmasi" role="dialog" aria-modal="true" aria-labelledby="modalJudul" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(11, 37, 69, 0.55); align-items: center; justify-content: center; padding: 16px;">
+        <div style="background: #fff; border-radius: 16px; max-width: 420px; width: 100%; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: #ffebee; color: #c62828; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <h3 id="modalJudul" style="margin: 0; font-size: 16px; font-weight: 800; color: #0b2545;">Konfirmasi</h3>
+            </div>
+            <p id="modalPesan" style="margin: 0 0 20px; font-size: 13px; line-height: 1.5; color: #475569; word-break: break-word;"></p>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" id="modalBatal" style="background: #eef4f8; color: #475569; border: 1px solid #cbd5e1; padding: 9px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">Batal</button>
+                <button type="button" id="modalLanjut" style="background: #e63946; color: #fff; border: none; padding: 9px 18px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer;">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pertahankan posisi scroll setelah Cari / Tampilkan / Terima / Tolak / Hapus
+        const SCROLL_KEY = 'adminScrollY';
+        function simpanScroll() {
+            try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)); } catch (e) {}
+        }
+        (function () {
+            if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+            let y = null;
+            try { y = sessionStorage.getItem(SCROLL_KEY); sessionStorage.removeItem(SCROLL_KEY); } catch (e) {}
+            if (y !== null) {
+                const target = parseInt(y, 10) || 0;
+                window.scrollTo(0, target);
+                // ulangi setelah gambar selesai dimuat agar tinggi halaman sudah final
+                window.addEventListener('load', () => window.scrollTo(0, target));
+            }
+            // form yang dikirim lewat tombol (submit event)
+            document.querySelectorAll('form').forEach(f => f.addEventListener('submit', simpanScroll));
+        })();
+
+        // Pop-up konfirmasi untuk tombol dengan atribut data-konfirmasi-pesan
+        (function () {
+            const modal = document.getElementById('modalKonfirmasi');
+            const elJudul = document.getElementById('modalJudul');
+            const elPesan = document.getElementById('modalPesan');
+            const btnBatal = document.getElementById('modalBatal');
+            const btnLanjut = document.getElementById('modalLanjut');
+            let formTarget = null;
+
+            function buka(btn) {
+                formTarget = btn.form;
+                elJudul.textContent = btn.dataset.konfirmasiJudul || 'Konfirmasi';
+                elPesan.textContent = btn.dataset.konfirmasiPesan || 'Lanjutkan tindakan ini?';
+                btnLanjut.textContent = btn.dataset.konfirmasiTombol || 'Ya, Lanjutkan';
+                modal.style.display = 'flex';
+                btnBatal.focus();
+            }
+            function tutup() {
+                modal.style.display = 'none';
+                formTarget = null;
+            }
+
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-konfirmasi-pesan]');
+                if (!btn || !btn.form) return;
+                e.preventDefault();
+                buka(btn);
+            });
+
+            btnBatal.addEventListener('click', tutup);
+            modal.addEventListener('click', (e) => { if (e.target === modal) tutup(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') tutup();
+            });
+            btnLanjut.addEventListener('click', () => {
+                if (!formTarget) return;
+                const f = formTarget;
+                tutup();
+                simpanScroll();
+                f.submit();
+            });
+        })();
+
+        // Pop-up edit peserta
+        (function () {
+            const modal = document.getElementById('modalEdit');
+            const form = document.getElementById('formEditPeserta');
+            if (!modal || !form) return;
+
+            function buka(btn) {
+                const d = btn.dataset;
+                form.action = '/admin/peserta/edit/' + d.id;
+                document.getElementById('editUsernameTeks').textContent = d.username;
+                document.getElementById('editNama').value = d.nama;
+                document.getElementById('editKategori').value = d.kategori;
+                document.getElementById('editPosisi').value = d.posisi;
+                document.getElementById('editInstansi').value = d.instansi;
+                document.getElementById('editMentor').value = d.mentor;
+                document.getElementById('editEmail').value = d.email;
+                document.getElementById('editPassword').value = '';
+                document.getElementById('editFoto').value = '';
+                modal.style.display = 'flex';
+                document.getElementById('editNama').focus();
+            }
+            function tutup() { modal.style.display = 'none'; }
+
+            document.querySelectorAll('.btn-edit-peserta').forEach(btn => {
+                btn.addEventListener('click', () => buka(btn));
+            });
+            document.getElementById('editBatal').addEventListener('click', tutup);
+            modal.addEventListener('click', (e) => { if (e.target === modal) tutup(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.style.display === 'flex') tutup();
+            });
+        })();
+
+        const formatJamWita = new Intl.DateTimeFormat('id-ID', {
+            timeZone: 'Asia/Makassar', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+        function updateLiveClock() {
+            // Jam selalu WITA, apa pun zona waktu perangkat
+            document.getElementById('headerLiveClock').textContent =
+                formatJamWita.format(new Date()).replace(/\./g, ':') + " WITA";
+        }
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock();
+
+        // Filter riwayat otomatis
+        (function () {
+            const form = document.getElementById('formFilterRiwayat');
+            if (!form) return;
+            const statusEl = document.getElementById('filterAutoStatus');
+            let debounceTimer = null;
+
+            function submitForm() {
+                if (statusEl) statusEl.style.display = 'block';
+                simpanScroll();
+                form.submit();
+            }
+
+            form.querySelectorAll('[data-autosubmit="instant"]').forEach(el => {
+                el.addEventListener('change', submitForm);
+            });
+
+            form.querySelectorAll('[data-autosubmit="debounce"]').forEach(el => {
+                el.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(submitForm, 600);
+                });
+                el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        clearTimeout(debounceTimer);
+                        submitForm();
+                    }
+                });
+            });
+
+            const searchInput = form.querySelector('input[name="cari"]');
+            if (searchInput && searchInput.value) {
+                searchInput.focus();
+                const val = searchInput.value;
+                searchInput.setSelectionRange(val.length, val.length);
+            }
+        })();
+
+        // Rekap: tombol rentang cepat
+        (function () {
+            const form = document.getElementById('formRekap');
+            if (!form) return;
+            document.querySelectorAll('.rekap-preset').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById('rekapDari').value = btn.dataset.dari;
+                    document.getElementById('rekapSampai').value = btn.dataset.sampai;
+                    simpanScroll();
+                    form.submit();
+                });
+            });
+        })();
+
+        // Tab per jenis pemagangan
+        (function () {
+            const tabButtons = document.querySelectorAll('#kategoriTabs .kategori-tab-btn');
+            const rows = document.querySelectorAll('#pesertaTable tbody tr[data-kategori]');
+            const emptyState = document.getElementById('pesertaEmptyState');
+
+            const counts = { 'Semua': rows.length };
+            rows.forEach(row => {
+                const kategori = row.getAttribute('data-kategori');
+                counts[kategori] = (counts[kategori] || 0) + 1;
+            });
+            tabButtons.forEach(btn => {
+                const tab = btn.getAttribute('data-tab');
+                const countEl = document.getElementById('count-' + tab);
+                if (countEl) countEl.textContent = counts[tab] || 0;
+            });
+
+            function applyFilter(tab) {
+                let visibleCount = 0;
+                rows.forEach(row => {
+                    const match = (tab === 'Semua') || (row.getAttribute('data-kategori') === tab);
+                    row.style.display = match ? '' : 'none';
+                    if (match) visibleCount++;
+                });
+                emptyState.style.display = (visibleCount === 0) ? 'block' : 'none';
+            }
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    applyFilter(btn.getAttribute('data-tab'));
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
