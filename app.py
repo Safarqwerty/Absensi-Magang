@@ -199,12 +199,13 @@ def label_periode(dari, sampai):
 
 
 def baca_rentang_rekap(arg_dari, arg_sampai):
-    """Baca rentang tanggal dari URL. Default: tanggal 1 bulan ini s/d hari ini."""
+    """Baca rentang tanggal dari URL. Default: hari ini saja (WITA).
+    Untuk melihat hari/bulan lain, admin memakai tombol cepat atau mengisi tanggal manual."""
     hari_ini = sekarang().date()
     try:
         dari = datetime.strptime(arg_dari, "%Y-%m-%d").date()
     except Exception:
-        dari = hari_ini.replace(day=1)
+        dari = hari_ini            # sebelumnya: hari_ini.replace(day=1)
     try:
         sampai = datetime.strptime(arg_sampai, "%Y-%m-%d").date()
     except Exception:
@@ -551,6 +552,10 @@ def index():
         filter_tahun = request.args.get('tahun', '')
         filter_kategori = request.args.get('kategori', '')
         filter_cari = request.args.get('cari', '').strip()
+
+        # Bawaan: tampilkan hanya hari ini (WITA). Riwayat lama tetap bisa dilihat lewat filter tanggal.
+        if not (filter_tanggal or filter_bulan or filter_tahun):
+            filter_tanggal = sekarang().strftime("%Y-%m-%d")
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -1387,7 +1392,6 @@ def export_rekap():
         "Content-Disposition": f"attachment; filename={nama_file}",
         "Content-Type": XLSX_MIME
     }
-
 
 @app.route("/logout")
 def logout():
